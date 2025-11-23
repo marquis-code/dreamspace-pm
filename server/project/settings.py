@@ -11,13 +11,28 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-import environ
 
-env = environ.Env()
-environ.Env.read_env()
+# Initialize environment variables
+env = environ.Env(
+    # Set default values and casting
+    DEBUG=(bool, True),
+    ALLOWED_HOSTS=(list, []),
+    CORS_ALLOWED_ORIGINS=(list, []),
+)
+
+# Read .env file (optional - will use system environment variables if not found)
+env_file = os.path.join(BASE_DIR, '.env')
+if os.path.exists(env_file):
+    environ.Env.read_env(env_file)
+    print(f"✅ Loaded environment from .env file: {env_file}")
+else:
+    print(f"ℹ️  No .env file found. Using system environment variables.")
+    print(f"   Searched at: {env_file}")
 
 
 # Quick-start development settings - unsuitable for production
@@ -27,9 +42,9 @@ environ.Env.read_env()
 SECRET_KEY = 'django-insecure-g)9!&$$lg87$%fdwuf)kq%99aq$q*7jc2_beb^plb%d&iudfpv'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = env('ALLOWED_HOSTS', default=[])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', '0.0.0.0'])
 
 
 # Application definition
@@ -167,7 +182,7 @@ SIMPLE_JWT = {
 }
 
 # CORS Settings
-CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS', default= [
+CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     "http://localhost:3000",
     "http://localhost:5173",
     "http://127.0.0.1:3000",
@@ -183,4 +198,5 @@ cloudinary.config(
     cloud_name=env('CLOUDINARY_CLOUD_NAME', default=''),
     api_key=env('CLOUDINARY_API_KEY', default=''),
     api_secret=env('CLOUDINARY_API_SECRET', default=''),
+    secure=True
 )
